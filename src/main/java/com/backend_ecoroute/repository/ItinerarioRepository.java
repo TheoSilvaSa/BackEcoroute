@@ -1,0 +1,7 @@
+package com.backend_ecoroute.repository;
+
+import com.backend_ecoroute.model.Itinerario;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ItinerarioRepository extends JpaRepository<Itinerario, Long> {
+}
