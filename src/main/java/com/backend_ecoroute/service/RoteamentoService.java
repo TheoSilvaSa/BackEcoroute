@@ -18,6 +18,13 @@ public class RoteamentoService {
         this.ruaRepo = ruaRepo;
     }
 
+    public Map<String, Object> calcularMenorRotaBier(Long origemId, Long destinoId){
+        Map<Long, Double> distancias = new HashMap<>();
+        Map<Long, Long> predecessores = new HashMap<>();
+
+        return null;
+    }
+
     public Map<String, Object> calcularMenorRota(Long origemId, Long destinoId) {
         Map<Long, Double> distancias = new HashMap<>();
         Map<Long, Long> predecessores = new HashMap<>();
@@ -26,7 +33,7 @@ public class RoteamentoService {
         Comparator<Long> distanciaComparator = Comparator.comparing(distancias::get);
         PriorityQueue<Long> fila = new PriorityQueue<>(distanciaComparator);
 
-        // Inicialização
+        // Inicialização, carregando o grafo aqui
         List<Bairro> todosBairros = bairroRepo.findAll();
         for (Bairro b : todosBairros) {
             distancias.put(b.getId(), Double.MAX_VALUE);
