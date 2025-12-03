@@ -8,8 +8,10 @@ import com.backend_ecoroute.repository.ItinerarioRepository;
 import com.backend_ecoroute.repository.RotaRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/itinerarios")
@@ -55,12 +57,24 @@ public class ItinerarioController {
         Rota rotaBanco = rotaRepository.findByNome(itinerario.getRotaDescricao()).orElse(null);
 
         if (caminhaoBanco != null && rotaBanco != null) {
-            String lixoRota = rotaBanco.getTiposResiduosAtendidos();
-            String lixoCaminhao = caminhaoBanco.getResiduosSuportados();
+            String lixoRotaStr = rotaBanco.getTiposResiduosAtendidos();
+            String lixoCaminhaoStr = caminhaoBanco.getResiduosSuportados();
 
-            if (lixoCaminhao == null || !lixoCaminhao.contains(lixoRota)) {
+            if (lixoCaminhaoStr == null || lixoCaminhaoStr.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("erro", "Caminhão não suporta nenhum resíduo."));
+            }
+
+            List<String> requisitosRota = Arrays.stream(lixoRotaStr.split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+
+            List<String> capacidadesCaminhao = Arrays.stream(lixoCaminhaoStr.split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+
+            if (!capacidadesCaminhao.containsAll(requisitosRota)) {
                 return ResponseEntity.badRequest().body(Map.of(
-                        "erro", "Erro: Caminhão de " + lixoCaminhao + " não pode levar " + lixoRota
+                        "erro", "Erro: Caminhão (" + lixoCaminhaoStr + ") não atende aos requisitos da rota (" + lixoRotaStr + ")."
                 ));
             }
         }
