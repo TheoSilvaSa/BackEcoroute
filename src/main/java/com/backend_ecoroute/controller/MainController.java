@@ -17,27 +17,12 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class MainController {
 
-    private final UsuarioRepository usuarioRepository;
     private final RoteamentoService roteamentoService;
     private final BairroRepository bairroRepository;
 
-    public MainController(UsuarioRepository usuarioRepository, RoteamentoService roteamentoService, BairroRepository bairroRepository) {
-        this.usuarioRepository = usuarioRepository;
+    public MainController(RoteamentoService roteamentoService, BairroRepository bairroRepository) {
         this.roteamentoService = roteamentoService;
         this.bairroRepository = bairroRepository;
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
-        String email = loginData.get("email");
-        String senha = loginData.get("senha");
-
-        Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
-
-        if (usuario != null && usuario.getSenha().equals(senha)) {
-            return ResponseEntity.ok(usuario);
-        }
-        return ResponseEntity.status(401).body("Credenciais inválidas");
     }
 
     @GetMapping("/rota")
@@ -51,7 +36,6 @@ public class MainController {
         if (idsBairros == null || idsBairros.isEmpty()) {
             return ResponseEntity.badRequest().body("Nenhum ponto de coleta selecionado.");
         }
-
 
         Map<String, Object> resultado = new HashMap<>();
 
