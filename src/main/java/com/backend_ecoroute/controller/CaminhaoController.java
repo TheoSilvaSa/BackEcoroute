@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/caminhoes")
@@ -24,14 +25,23 @@ public class CaminhaoController {
     }
 
     @PostMapping
-    public Caminhao criar(@RequestBody Caminhao caminhao) {
-        return repository.save(caminhao);
+    public ResponseEntity<?> criar(@RequestBody Caminhao caminhao) {
+        if (repository.existsByPlaca(caminhao.getPlaca())) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "Já existe um caminhão cadastrado com a placa " + caminhao.getPlaca()));
+        }
+
+        return ResponseEntity.ok(repository.save(caminhao));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Caminhao> atualizar(@PathVariable Long id, @RequestBody Caminhao dadosAtualizados) {
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody Caminhao dadosAtualizados) {
         return repository.findById(id)
                 .map(caminhao -> {
+                    if (!caminhao.getPlaca().equals(dadosAtualizados.getPlaca()) &&
+                            repository.existsByPlaca(dadosAtualizados.getPlaca())) {
+                        throw new IllegalArgumentException("A placa " + dadosAtualizados.getPlaca() + " já está em uso.");
+                    }
+
                     caminhao.setPlaca(dadosAtualizados.getPlaca());
                     caminhao.setMotorista(dadosAtualizados.getMotorista());
                     caminhao.setCapacidadeCarga(dadosAtualizados.getCapacidadeCarga());
@@ -39,6 +49,11 @@ public class CaminhaoController {
                     return ResponseEntity.ok(repository.save(caminhao));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of("erro", ex.getMessage()));
     }
 
     @DeleteMapping("/{id}")
