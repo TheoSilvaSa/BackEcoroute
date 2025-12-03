@@ -29,7 +29,6 @@ public class RuaConexaoController {
         return repository.save(rua);
     }
 
-    // Permite atualizar a distância (peso da aresta) [cite: 52]
     @PutMapping("/{id}")
     public ResponseEntity<RuaConexao> atualizar(@PathVariable Long id, @RequestBody RuaConexao dados) {
         return repository.findById(id)

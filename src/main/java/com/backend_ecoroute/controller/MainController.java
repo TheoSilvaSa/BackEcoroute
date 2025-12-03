@@ -52,20 +52,16 @@ public class MainController {
             return ResponseEntity.badRequest().body("Nenhum ponto de coleta selecionado.");
         }
 
-        // --- Lógica Placeholder: Simula a rota otimizada ---
 
         Map<String, Object> resultado = new HashMap<>();
 
-        // 1. A rota sempre começa no Centro (ID 2)
         List<Long> rotaOtimizadaIds = new ArrayList<>();
         rotaOtimizadaIds.add(2L);
-        rotaOtimizadaIds.addAll(idsBairros); // Adiciona os pontos selecionados
-        rotaOtimizadaIds.add(2L); // 2. A rota deve terminar no Centro (Garagem - ID 2)
+        rotaOtimizadaIds.addAll(idsBairros);
+        rotaOtimizadaIds.add(2L);
 
-        // 2. Converte IDs para Nomes (para o Front-end)
         List<Map<String, Object>> bairrosVisitados = new ArrayList<>();
         for (Long id : rotaOtimizadaIds) {
-            // Assume que bairroRepository está injetado na classe
             bairroRepository.findById(id).ifPresent(bairro -> {
                 Map<String, Object> bMap = new HashMap<>();
                 bMap.put("id", bairro.getId());
@@ -74,8 +70,7 @@ public class MainController {
             });
         }
 
-        // Retorna a distância e a sequência de bairros (simulando a saída do TSP)
-        resultado.put("distancia", 50.5); // Distância simulada em km
+        resultado.put("distancia", 50.5);
         resultado.put("bairrosVisitados", bairrosVisitados);
 
         return ResponseEntity.ok(resultado);

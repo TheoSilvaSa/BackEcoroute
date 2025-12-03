@@ -18,13 +18,11 @@ public class PontoColetaController {
         this.repository = repository;
     }
 
-    // READ - Listar todos os pontos [cite: 46]
     @GetMapping
     public List<PontoColeta> listarTodos() {
         return repository.findAll();
     }
 
-    // READ - Buscar por ID
     @GetMapping("/{id}")
     public ResponseEntity<PontoColeta> buscarPorId(@PathVariable Long id) {
         return repository.findById(id)
@@ -32,14 +30,11 @@ public class PontoColetaController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // CREATE - Cadastrar novo ponto [cite: 43]
     @PostMapping
     public PontoColeta criar(@RequestBody PontoColeta ponto) {
-        // Validação básica de regra de negócio (ex: nome único) poderia ser aqui
         return repository.save(ponto);
     }
 
-    // UPDATE - Atualizar dados do ponto [cite: 50]
     @PutMapping("/{id}")
     public ResponseEntity<PontoColeta> atualizar(@PathVariable Long id, @RequestBody PontoColeta dados) {
         return repository.findById(id)
@@ -51,13 +46,11 @@ public class PontoColetaController {
                     ponto.setEndereco(dados.getEndereco());
                     ponto.setHorario(dados.getHorario());
                     ponto.setTiposResiduo(dados.getTiposResiduo());
-                    // Nota: Não alteramos o Bairro aqui para simplificar, mas poderia ser feito
                     return ResponseEntity.ok(repository.save(ponto));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // DELETE - Remover ponto [cite: 55]
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         if (repository.existsById(id)) {

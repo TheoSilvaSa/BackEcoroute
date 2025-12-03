@@ -19,10 +19,9 @@ public class DataInitializer implements CommandLineRunner {
 
     private final BairroRepository bairroRepository;
     private final RuaConexaoRepository ruaRepository;
-    private final PontoColetaRepository pontoRepository; // Adicionado
+    private final PontoColetaRepository pontoRepository;
     private final UsuarioRepository usuarioRepository;
 
-    // Construtor atualizado com a injeção do PontoColetaRepository
     public DataInitializer(BairroRepository bairroRepository, RuaConexaoRepository ruaRepository, PontoColetaRepository pontoRepository, UsuarioRepository usuarioRepository) {
         this.bairroRepository = bairroRepository;
         this.ruaRepository = ruaRepository;
@@ -34,7 +33,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         carregarBairros();
         carregarRuas();
-        carregarPontosColeta(); // Novo método chamado
+        carregarPontosColeta();
         criarUsuarioAdmin();
     }
 
@@ -65,14 +64,13 @@ public class DataInitializer implements CommandLineRunner {
 
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
             String line;
-            br.readLine(); // Pular cabeçalho
+            br.readLine();
 
             int linhasSalvas = 0;
             System.out.println("--- DEBUG: INICIANDO CARGA DE RUAS ---");
 
             while ((line = br.readLine()) != null) {
 
-                // Verifica separador (vírgula ou ponto e vírgula)
                 String separator = line.contains(";") ? ";" : ",";
                 String[] data = line.split(separator, -1);
 
@@ -82,16 +80,11 @@ public class DataInitializer implements CommandLineRunner {
                 }
 
                 try {
-                    // 1. Pega os dados e faz o trim
                     Long id = Long.parseLong(data[0].trim());
                     Long idOrigem = Long.parseLong(data[1].trim());
                     Long idDestino = Long.parseLong(data[2].trim());
-
-                    // 2. CORREÇÃO DECIMAL: Substitui vírgula por ponto para parsing correto
                     String distanciaStr = data[3].trim().replace(",", ".");
                     Double distancia = Double.parseDouble(distanciaStr);
-
-                    // 💡 NOVO: IMPRIME NO CONSOLE PARA DEBUG 💡
                     System.out.println("RAW: " + line);
                     System.out.println(String.format("PARSED: ID=%d, Origem=%d, Destino=%d, Distancia=%.1f",
                             id, idOrigem, idDestino, distancia));
@@ -109,7 +102,6 @@ public class DataInitializer implements CommandLineRunner {
                     }
 
                 } catch (NumberFormatException e) {
-                    // Loga a exceção se a conversão falhar (isso nos diz que o separador/formato está errado)
                     System.err.println("ERRO PARSING RUA: Falha ao converter número/ID: " + e.getMessage() + " na linha: " + line);
                 }
             }
@@ -128,15 +120,12 @@ public class DataInitializer implements CommandLineRunner {
 
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
             String line;
-            br.readLine(); // Pular cabeçalho
+            br.readLine();
 
             while ((line = br.readLine()) != null) {
-                // 💡 NOVO SPLIT: Usando regex para compensar a vírgula dentro das aspas do endereço.
-                // Esta regex é mais robusta para ignorar vírgulas dentro de campos entre aspas.
                 String[] data = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
 
                 if (data.length < 9) {
-                    // Se a linha for malformada, fazemos o split simples como fallback:
                     data = line.split(",", -1);
                     if (data.length < 9) continue;
                 }
@@ -148,20 +137,16 @@ public class DataInitializer implements CommandLineRunner {
 
                 if (bairro != null) {
 
-                    // Mapeamento dos índices (Agora assumindo que o campo 'endereco' está unido, mas o índice está correto)
-                    // Usamos .replace("\"", "") para remover as aspas que sobraram na leitura
-
                     PontoColeta ponto = new PontoColeta(
                             id,
                             bairro,
-                            data[2].trim(), // nome
-                            data[3].trim(), // responsavel
-                            data[4].trim(), // telefone
-                            data[5].trim(), // email
-                            data[6].trim().replace("\"", ""), // endereco (Limpa as aspas)
-
-                            data[7].trim().replace("\"", ""), // HORÁRIO (Lê a coluna 8)
-                            data[8].trim().replace("\"", "")  // RESÍDUO (Lê a coluna 9)
+                            data[2].trim(),
+                            data[3].trim(),
+                            data[4].trim(),
+                            data[5].trim(),
+                            data[6].trim().replace("\"", ""),
+                            data[7].trim().replace("\"", ""),
+                            data[8].trim().replace("\"", "")
                     );
                     pontoRepository.save(ponto);
                 }
