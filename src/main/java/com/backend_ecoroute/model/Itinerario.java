@@ -14,12 +14,11 @@ public class Itinerario {
     @JoinColumn(name = "caminhao_id")
     private Caminhao caminhao;
 
-    // Como a rota é dinâmica (calculada), vamos salvar a descrição ou o ID do destino/origem
     private String rotaDescricao;
 
     private LocalDate dataAgendada;
 
-    private String status; // "PENDENTE", "CONCLUIDO"
+    private String status;
 
     public Itinerario() {
     }

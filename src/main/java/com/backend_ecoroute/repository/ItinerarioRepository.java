@@ -4,4 +4,5 @@ import com.backend_ecoroute.model.Itinerario;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ItinerarioRepository extends JpaRepository<Itinerario, Long> {
+    boolean existsByRotaDescricao(String rotaDescricao);
 }

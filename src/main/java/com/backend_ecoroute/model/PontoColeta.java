@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 public class PontoColeta {
 
     @Id
-    private Long id; // ID vem do CSV
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "bairro_id")
@@ -18,7 +18,7 @@ public class PontoColeta {
     private String email;
     private String endereco;
     private String horario;
-    private String tiposResiduo; // Ex: "Metal, Papel"
+    private String tiposResiduo;
 
     public PontoColeta() {
     }

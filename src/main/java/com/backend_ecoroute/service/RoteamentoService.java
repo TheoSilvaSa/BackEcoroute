@@ -5,6 +5,7 @@ import com.backend_ecoroute.model.RuaConexao;
 import com.backend_ecoroute.repository.BairroRepository;
 import com.backend_ecoroute.repository.RuaConexaoRepository;
 import org.springframework.stereotype.Service;
+
 import java.util.*;
 
 @Service
@@ -18,97 +19,136 @@ public class RoteamentoService {
         this.ruaRepo = ruaRepo;
     }
 
-    public Map<String, Object> calcularMenorRota(Long origemId, Long destinoId) {
-        Map<Long, Double> distancias = new HashMap<>();
-        Map<Long, Long> predecessores = new HashMap<>();
+    // Classe auxiliar interna para representar o Vizinho
+    private static class Neighbor {
+        Long nodeId;
+        double weight;
 
-        // Custom Comparator para ordenar a fila pela menor distância
-        Comparator<Long> distanciaComparator = Comparator.comparing(distancias::get);
-        PriorityQueue<Long> fila = new PriorityQueue<>(distanciaComparator);
+        public Neighbor(Long nodeId, double weight) {
+            this.nodeId = nodeId;
+            this.weight = weight;
+        }
+    }
+
+    public Map<String, Object> calcularMenorRota(Long origemId, Long destinoId) {
+
+        //Monta o grafo em memória
+        List<Bairro> nodes = bairroRepo.findAll();
+        List<RuaConexao> edges = ruaRepo.findAll();
+
+        //Verificação básica
+        if (!bairroRepo.existsById(origemId) || !bairroRepo.existsById(destinoId)) {
+            return criarErro("Bairro de origem ou destino não encontrado.");
+        }
+
+        // 2. Estruturas do Dijkstra
+        Map<Long, Double> distances = new HashMap<>();
+        Map<Long, Long> previous = new HashMap<>();
+        Set<Long> pq = new HashSet<>();
 
         // Inicialização
-        List<Bairro> todosBairros = bairroRepo.findAll();
-        for (Bairro b : todosBairros) {
-            distancias.put(b.getId(), Double.MAX_VALUE);
+        for (Bairro node : nodes) {
+            distances.put(node.getId(), Double.POSITIVE_INFINITY);
+            previous.put(node.getId(), null);
+            pq.add(node.getId());
         }
 
-        distancias.put(origemId, 0.0);
-        fila.add(origemId);
+        // Garante que o nó inicial tem distância 0
+        distances.put(origemId, 0.0);
 
-        // --- Execução do Dijkstra ---
-        while (!fila.isEmpty()) {
-            Long uId = fila.poll();
+        // 3. Montagem da Lista de Adjacência (Mapeando RuaConexao -> Neighbor)
+        Map<Long, List<Neighbor>> adj = new HashMap<>();
+        for (Bairro node : nodes) {
+            adj.put(node.getId(), new ArrayList<>());
+        }
 
-            if (uId.equals(destinoId)) break;
+        for (RuaConexao edge : edges) {
+            // O grafo é bi-direcional? Se sim, adicionamos nos dois sentidos.
+            // Baseado no seu CSV, as ruas parecem ter sentido único ou duplo dependendo do cadastro.
+            // Mas o algoritmo original TypeScript tratava como não-direcionado (adicionava nas duas pontas).
+            // Vou manter a lógica do TypeScript original:
+            if (edge.getOrigem() != null && edge.getDestino() != null) {
+                Long from = edge.getOrigem().getId();
+                Long to = edge.getDestino().getId();
+                double dist = edge.getDistanciaKm();
 
-            Bairro u = bairroRepo.findById(uId)
-                    .orElseThrow(() -> new RuntimeException("Bairro de origem não encontrado: " + uId));
+                // Adiciona ida
+                if (adj.containsKey(from)) adj.get(from).add(new Neighbor(to, dist));
+                // Adiciona volta (Se quiser grafo direcionado, remova esta linha abaixo)
+                if (adj.containsKey(to)) adj.get(to).add(new Neighbor(from, dist));
+            }
+        }
 
-            // Busca vizinhos (conexões de saída)
-            List<RuaConexao> vizinhos = ruaRepo.findByOrigem(u);
+        // 4. Execução do Algoritmo (Lógica Core)
+        while (!pq.isEmpty()) {
+            Long closestNode = null;
+            double minDistance = Double.POSITIVE_INFINITY;
 
-            for (RuaConexao rua : vizinhos) {
-                Long vId = rua.getDestino().getId();
-                Double novoPeso = distancias.get(uId) + rua.getDistanciaKm();
+            // Busca linear pelo menor nó (igual ao original TS)
+            for (Long node : pq) {
+                double dist = distances.get(node);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestNode = node;
+                }
+            }
 
-                if (novoPeso < distancias.get(vId)) {
-                    distancias.put(vId, novoPeso);
-                    predecessores.put(vId, uId);
-                    // Adiciona o nó vizinho à fila, reordenando-a
-                    fila.add(vId);
+            if (closestNode == null || distances.get(closestNode) == Double.POSITIVE_INFINITY) break;
+
+            pq.remove(closestNode);
+
+            // Se chegou ao destino
+            if (closestNode.equals(destinoId)) {
+                return construirRespostaSucesso(destinoId, origemId, previous, distances);
+            }
+
+            // Relaxamento das arestas
+            if (adj.containsKey(closestNode)) {
+                for (Neighbor neighbor : adj.get(closestNode)) {
+                    // Importante: verifica se o vizinho ainda está no set de não visitados (opcional mas otimiza)
+                    // ou apenas relaxa a aresta:
+                    double newDist = distances.get(closestNode) + neighbor.weight;
+                    if (newDist < distances.get(neighbor.nodeId)) {
+                        distances.put(neighbor.nodeId, newDist);
+                        previous.put(neighbor.nodeId, closestNode);
+                    }
                 }
             }
         }
 
-        // --- Reconstrução do Caminho ---
+        return criarErro("Não foi encontrado caminho entre os bairros selecionados.");
+    }
 
-        List<String> caminhoNomes = new ArrayList<>();
-        Double distanciaFinal = distancias.get(destinoId);
+    // --- Métodos Auxiliares para montar o JSON de resposta (PathResult) ---
 
-        if (distanciaFinal == null || distanciaFinal == Double.MAX_VALUE) {
-            Map<String, Object> erro = new HashMap<>();
-            erro.put("erro", "Caminho não encontrado ou bairros desconectados.");
-            return erro;
+    private Map<String, Object> construirRespostaSucesso(Long destinoId, Long origemId, Map<Long, Long> previous, Map<Long, Double> distances) {
+        List<String> pathNames = new ArrayList<>();
+        Long currentNode = destinoId;
+
+        // Reconstrói o caminho de trás para frente
+        while (currentNode != null) {
+            // Busca o nome do bairro no banco para exibir (ou poderia ter cacheado num Map<Long, String> no início)
+            String nomeBairro = bairroRepo.findById(currentNode).map(Bairro::getNome).orElse("Desconhecido");
+            pathNames.add(0, nomeBairro); // Adiciona no início (unshift)
+
+            currentNode = previous.get(currentNode);
         }
 
-        Long atual = destinoId;
-
-        // Loop que traça o caminho de trás para frente usando o mapa de predecessores
-        while (atual != null) {
-            Bairro b = bairroRepo.findById(atual).orElse(null);
-            if (b != null) {
-                // Adiciona o nome do bairro no início da lista (índice 0)
-                caminhoNomes.add(0, b.getNome());
-            }
-
-            // Move para o predecessor
-            atual = predecessores.get(atual);
-
-            // Condição de parada de segurança para evitar loop infinito ou travamento em origem desconectada
-            if (atual != null && atual.equals(origemId)) {
-                // Adiciona a origem se ainda não foi adicionada (deve ser o primeiro item)
-                if (bairroRepo.findById(origemId).isPresent() && !caminhoNomes.get(0).equals(bairroRepo.findById(origemId).get().getNome())) {
-                    caminhoNomes.add(0, bairroRepo.findById(origemId).get().getNome());
-                }
-                break;
-            }
-            if (atual != null && caminhoNomes.contains(bairroRepo.findById(atual).orElse(null).getNome())) {
-                // Quebra se detectar loop (embora improvável no Dijkstra)
-                break;
-            }
+        // Validação de segurança
+        String nomeOrigem = bairroRepo.findById(origemId).map(Bairro::getNome).orElse("");
+        if (!pathNames.isEmpty() && !pathNames.get(0).equals(nomeOrigem)) {
+            return criarErro("Erro na reconstrução do caminho.");
         }
-
-        // Se a reconstrução resultou em apenas um nó, mas o destino é diferente, algo falhou.
-        if (caminhoNomes.size() <= 1 && !origemId.equals(destinoId)) {
-            Map<String, Object> erro = new HashMap<>();
-            erro.put("erro", "Erro interno na reconstrução ou rota inválida.");
-            return erro;
-        }
-
 
         Map<String, Object> resultado = new HashMap<>();
-        resultado.put("distanciaTotal", distanciaFinal);
-        resultado.put("caminho", caminhoNomes);
+        resultado.put("caminho", pathNames);
+        resultado.put("distanciaTotal",  Math.round(distances.get(destinoId) * 100.0) / 100.0); // Arredonda 2 casas
         return resultado;
+    }
+
+    private Map<String, Object> criarErro(String mensagem) {
+        Map<String, Object> erro = new HashMap<>();
+        erro.put("erro", mensagem);
+        return erro;
     }
 }

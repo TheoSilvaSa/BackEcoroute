@@ -9,21 +9,18 @@ public class Rota {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nome; // Ex: "Rota Centro -> Zona Norte"
+    private String nome;
 
-    // Armazenamos a lista de bairros como string simples para facilitar
     @ElementCollection
     private List<String> sequenciaBairros;
 
     private Double distanciaTotal;
 
-    // 💡 NOVOS CAMPOS EXIGIDOS PELO DOCUMENTO
-    private String caminhaoDesignadoPlaca; // Placa do caminhão designado
-    private String tiposResiduosAtendidos; // Tipos de resíduos que o caminhão precisa atender nesta rota
+    private String caminhaoDesignadoPlaca;
+    private String tiposResiduosAtendidos;
 
     public Rota() {}
 
-    // Construtor Completo Atualizado
     public Rota(String nome, List<String> sequenciaBairros, Double distanciaTotal, String caminhaoDesignadoPlaca, String tiposResiduosAtendidos) {
         this.nome = nome;
         this.sequenciaBairros = sequenciaBairros;
@@ -32,7 +29,6 @@ public class Rota {
         this.tiposResiduosAtendidos = tiposResiduosAtendidos;
     }
 
-    // --- Getters e Setters Existentes ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getNome() { return nome; }
@@ -41,8 +37,6 @@ public class Rota {
     public void setSequenciaBairros(List<String> sequenciaBairros) { this.sequenciaBairros = sequenciaBairros; }
     public Double getDistanciaTotal() { return distanciaTotal; }
     public void setDistanciaTotal(Double distanciaTotal) { this.distanciaTotal = distanciaTotal; }
-
-    // --- Getters e Setters NOVOS ---
     public String getCaminhaoDesignadoPlaca() { return caminhaoDesignadoPlaca; }
     public void setCaminhaoDesignadoPlaca(String caminhaoDesignadoPlaca) { this.caminhaoDesignadoPlaca = caminhaoDesignadoPlaca; }
     public String getTiposResiduosAtendidos() { return tiposResiduosAtendidos; }

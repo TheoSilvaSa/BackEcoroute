@@ -18,19 +18,16 @@ public class CaminhaoController {
         this.repository = repository;
     }
 
-    // READ (Listar todos)
     @GetMapping
     public List<Caminhao> listarTodos() {
         return repository.findAll();
     }
 
-    // CREATE (Adicionar novo)
     @PostMapping
     public Caminhao criar(@RequestBody Caminhao caminhao) {
         return repository.save(caminhao);
     }
 
-    // UPDATE (Atualizar)
     @PutMapping("/{id}")
     public ResponseEntity<Caminhao> atualizar(@PathVariable Long id, @RequestBody Caminhao dadosAtualizados) {
         return repository.findById(id)
@@ -44,7 +41,6 @@ public class CaminhaoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // DELETE (Remover)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         if (repository.existsById(id)) {
