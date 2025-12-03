@@ -130,7 +130,10 @@ public class DataInitializer implements CommandLineRunner {
                     if (data.length < 9) continue;
                 }
 
-                Long id = Long.parseLong(data[0].trim());
+                // AVISO: Mantemos a leitura do ID do CSV apenas para processar a linha corretamente,
+                // mas NÃO vamos usá-lo no construtor para evitar conflito com o @GeneratedValue
+                Long idOriginalDoCsv = Long.parseLong(data[0].trim());
+
                 Long bairroId = Long.parseLong(data[1].trim());
 
                 Bairro bairro = bairroRepository.findById(bairroId).orElse(null);
@@ -138,7 +141,7 @@ public class DataInitializer implements CommandLineRunner {
                 if (bairro != null) {
 
                     PontoColeta ponto = new PontoColeta(
-                            id,
+                            null, // <--- AQUI ESTÁ A CORREÇÃO: Passamos null no ID para o banco gerar
                             bairro,
                             data[2].trim(),
                             data[3].trim(),

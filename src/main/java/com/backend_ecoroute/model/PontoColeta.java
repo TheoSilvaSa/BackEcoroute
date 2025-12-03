@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 public class PontoColeta {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
