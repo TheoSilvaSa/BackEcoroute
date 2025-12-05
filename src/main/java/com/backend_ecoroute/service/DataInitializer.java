@@ -9,6 +9,7 @@ import com.backend_ecoroute.repository.PontoColetaRepository;
 import com.backend_ecoroute.repository.RuaConexaoRepository;
 import com.backend_ecoroute.repository.UsuarioRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -31,17 +32,20 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        carregarBairros();
         carregarRuas();
         carregarPontosColeta();
         criarUsuarioAdmin();
     }
 
+    @Bean
     private void carregarBairros() {
         try {
             if (bairroRepository.count() > 0) return;
             var inputStream = getClass().getResourceAsStream("/bairros.csv");
             if (inputStream == null) return;
+            // DECORATOR
+            // Injetando inputStream dentro de InputStreamReader, sendo injetado dentro de BufferedReader
+            // Utilizado para leitura do arquivo .CSV
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
             String line;
             br.readLine();

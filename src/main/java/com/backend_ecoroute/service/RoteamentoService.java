@@ -8,6 +8,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+// SINGLETON
+// O BeanFactory do Spring Boot inicializa a Service em um padrão Singleton e garante que apenas uma instância será instanciada
+// FACTORY
+// Pois toda Service é manejada pela BeanFactory do Spring Boot
+// SingletonFactory/RoteamentoService é um exemplo disso, ao deixar @Service sem comentários, é possível visualizar que o programa
+// crasha ao tentar ser executado, pois já existe uma Service com o mesmo nome
 @Service
 public class RoteamentoService {
 
@@ -47,6 +53,8 @@ public class RoteamentoService {
         Set<Long> pq = new HashSet<>();
 
         // Inicialização
+        // ITERATOR
+        // É um Iterator pois ocorre a Iteração dos Objetos nodes
         for (Bairro node : nodes) {
             distances.put(node.getId(), Double.POSITIVE_INFINITY);
             previous.put(node.getId(), null);
@@ -58,6 +66,8 @@ public class RoteamentoService {
 
         // 3. Montagem da Lista de Adjacência (Mapeando RuaConexao -> Neighbor)
         Map<Long, List<Neighbor>> adj = new HashMap<>();
+        // ITERATOR
+        // É um Iterator pois ocorre a Iteração dos Objetos nodes
         for (Bairro node : nodes) {
             adj.put(node.getId(), new ArrayList<>());
         }
