@@ -1,6 +1,7 @@
 package com.backend_ecoroute.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
 public class PontoColeta {
@@ -15,8 +16,13 @@ public class PontoColeta {
 
     private String nome;
     private String responsavel;
+
+    @Pattern(regexp = "^\\(?\\d{2}\\)?\\s?\\d{4,5}-?\\d{4}$", message = "Telefone inválido")
     private String telefone;
+
+    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "E-mail inválido")
     private String email;
+
     private String endereco;
     private String horario;
     private String tiposResiduo;

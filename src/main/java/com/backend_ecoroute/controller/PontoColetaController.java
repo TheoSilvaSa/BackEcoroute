@@ -2,6 +2,7 @@ package com.backend_ecoroute.controller;
 
 import com.backend_ecoroute.model.PontoColeta;
 import com.backend_ecoroute.repository.PontoColetaRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,12 +32,12 @@ public class PontoColetaController {
     }
 
     @PostMapping
-    public PontoColeta criar(@RequestBody PontoColeta ponto) {
+    public PontoColeta criar(@Valid @RequestBody PontoColeta ponto) {
         return repository.save(ponto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PontoColeta> atualizar(@PathVariable Long id, @RequestBody PontoColeta dados) {
+    public ResponseEntity<PontoColeta> atualizar(@PathVariable Long id, @Valid @RequestBody PontoColeta dados) {
         return repository.findById(id)
                 .map(ponto -> {
                     ponto.setNome(dados.getNome());
