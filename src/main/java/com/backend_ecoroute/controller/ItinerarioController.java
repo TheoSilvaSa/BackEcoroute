@@ -8,6 +8,7 @@ import com.backend_ecoroute.repository.ItinerarioRepository;
 import com.backend_ecoroute.repository.RotaRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,10 @@ public class ItinerarioController {
         }
         if (itinerario.getDataAgendada() == null) {
             return ResponseEntity.badRequest().body(Map.of("erro", "Data é obrigatória."));
+        }
+
+        if (itinerario.getDataAgendada().isBefore(LocalDate.now())) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "Não é possível agendar para uma data passada."));
         }
 
         boolean jaAgendado = itinerarioRepository.existsByCaminhaoIdAndDataAgendada(
